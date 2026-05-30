@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Life is a beautiful ride with you by my side</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --muted: #5f6368;
+      --line: #d3d6da;
+      --selected: #d7ecfb;
+      --selected-border: #8ccaf0;
+      --theme-found: #b7dff2;
+      --theme-found-border: #83c7e8;
+      --spangram-found: #f8df72;
+      --spangram-border: #e2bd22;
+      --wrong: #f4b8b8;
+      --shadow: 0 12px 28px rgba(0,0,0,.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px 18px 30px;
+    }
+
+    header {
+      text-align: center;
+      padding: 16px 0 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .game-title {
+      margin: 0 0 16px;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: .08em;
+      font-weight: 900;
+    }
+
+    .theme-label {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: .08em;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 7px auto 8px;
+      max-width: 620px;
+      font-size: clamp(24px, 5vw, 38px);
+      line-height: 1.12;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .instructions {
+      margin: 0 auto;
+      max-width: 600px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 18px 0 12px;
+      padding: 11px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .status {
+      color: var(--text);
+    }
+
+    .message {
+      color: var(--muted);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 10px 0 20px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(28px, 52px));
+      gap: clamp(4px, 1.4vw, 8px);
+      width: 100%;
+      max-width: 590px;
+      margin: 0 auto;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .cell {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #000000;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: clamp(18px, 5.3vw, 30px);
+      font-weight: 800;
+      line-height: 1;
+      user-select: none;
+      touch-action: none;
+      transition:
+        background-color 120ms ease,
+        transform 80ms ease,
+        box-shadow 120ms ease;
+    }
+
+    .cell:hover {
+      transform: translateY(-1px);
+    }
+
+    .cell.selected {
+      background: var(--selected);
+      box-shadow: inset 0 0 0 2px var(--selected-border);
+    }
+
+    .cell.theme-found {
+      background: var(--theme-found);
+      box-shadow: inset 0 0 0 2px var(--theme-found-border);
+    }
+
+    .cell.spangram-found {
+      background: var(--spangram-found);
+      box-shadow: inset 0 0 0 2px var(--spangram-border);
+    }
+
+    .cell.wrong {
+      background: var(--wrong);
+    }
+
+    .cell.solved {
+      cursor: default;
+    }
+
+    .under-board {
+      margin: 0 auto;
+      max-width: 590px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #fff;
+    }
+
+    .sample {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,.12);
+    }
+
+    .sample.blue { background: var(--theme-found); }
+    .sample.yellow { background: var(--spangram-found); }
+
+    .reset {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #000;
+      font-weight: 800;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    canvas#confetti {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      place-items: center;
+      background: rgba(255,255,255,.82);
+      padding: 22px;
+    }
+
+    .overlay.show {
+      display: grid;
+    }
+
+    .modal {
+      width: min(100%, 540px);
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.18);
+      text-align: center;
+      padding: 30px 24px;
+    }
+
+    .modal .heart {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+
+    .modal h2 {
+      margin: 0 0 12px;
+      font-size: clamp(25px, 6vw, 38px);
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+    }
+
+    .modal p {
+      margin: 0;
+      color: #111111;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .modal button {
+      margin-top: 20px;
+      border: 0;
+      border-radius: 999px;
+      background: #000;
+      color: #fff;
+      font-weight: 800;
+      padding: 12px 18px;
+      cursor: pointer;
+    }
+
+    .shake {
+      animation: shake 260ms ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @media (max-width: 460px) {
+      .page {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .game-title {
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+
+      .status-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .message {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="complete-title">
+      <div class="heart">❤️</div>
+      <h2 id="complete-title">Life is a beautiful ride with you by my side</h2>
+      <p>
+        You found all the memories.<br>
+        Thank you for being my favorite travel buddy.
+      </p>
+      <button id="closeOverlay" type="button">Close</button>
+    </div>
+  </div>
+
+  <main class="page">
+    <header>
+      <p class="game-title">STRANDS</p>
+      <p class="theme-label">Today's Theme</p>
+      <h1>Life is a beautiful ride with you by my side</h1>
+      <p class="instructions">
+        Find the hidden words by dragging across adjacent letters. Words can bend in any direction.
+        Every letter belongs to one answer.
+      </p>
+    </header>
+
+    <section class="status-bar" aria-live="polite">
+      <div class="status" id="progress">Found: 0 / 10</div>
+      <div class="message" id="message">Find the first memory.</div>
+    </section>
+
+    <section class="board-wrap">
+      <div class="board" id="board" aria-label="Letter grid"></div>
+    </section>
+
+    <section class="under-board" aria-label="Legend and controls">
+      <span class="pill"><span class="sample blue"></span> found word</span>
+      <span class="pill"><span class="sample yellow"></span> spangram</span>
+      <button class="reset" id="resetBtn" type="button">Reset</button>
+    </section>
+  </main>
+
+  <script>
+    const GRID = [["E", "E", "L", "L", "V", "R", "E", "R", "L", "L"], ["I", "F", "O", "U", "E", "A", "P", "O", "S", "E"], ["F", "A", "V", "D", "D", "O", "R", "N", "O", "M"], ["T", "R", "E", "U", "I", "F", "E", "O", "E", "R"], ["F", "A", "L", "B", "E", "S", "C", "V", "B", "B"], ["E", "R", "R", "O", "E", "S", "D", "S", "E", "L"], ["B", "K", "I", "P", "D", "I", "A", "V", "I", "D"], ["U", "N", "N", "G", "I", "G", "O", "L", "O", "C"]];
+    const SOLUTIONS = [{"key": "EIFFEL", "display": "Eiffel", "type": "theme", "coords": [[0, 0], [1, 0], [2, 0], [1, 1], [0, 1], [0, 2]]}, {"key": "LOUVRE", "display": "Louvre", "type": "theme", "coords": [[0, 3], [1, 2], [1, 3], [0, 4], [0, 5], [1, 4]]}, {"key": "APEROL", "display": "Aperol", "type": "theme", "coords": [[1, 5], [1, 6], [0, 6], [0, 7], [1, 7], [0, 8]]}, {"key": "LEMONS", "display": "Lemons", "type": "theme", "coords": [[0, 9], [1, 9], [2, 9], [2, 8], [2, 7], [1, 8]]}, {"key": "TRAVELBUDDIESFOREVER", "display": "Travel Buddies Forever", "type": "spangram", "coords": [[3, 0], [3, 1], [2, 1], [2, 2], [3, 2], [4, 2], [4, 3], [3, 3], [2, 3], [2, 4], [3, 4], [4, 4], [4, 5], [3, 5], [2, 5], [2, 6], [3, 6], [4, 7], [3, 8], [3, 9]]}, {"key": "FAREBUNKING", "display": "Fare-bunking", "type": "theme", "coords": [[4, 0], [4, 1], [5, 1], [5, 0], [6, 0], [7, 0], [7, 1], [6, 1], [6, 2], [7, 2], [7, 3]]}, {"key": "PRODIGIES", "display": "Prodigies", "type": "theme", "coords": [[6, 3], [5, 2], [5, 3], [6, 4], [7, 4], [7, 5], [6, 5], [5, 4], [5, 5]]}, {"key": "COBBLES", "display": "Cobbles", "type": "theme", "coords": [[4, 6], [3, 7], [4, 8], [4, 9], [5, 9], [5, 8], [5, 7]]}, {"key": "DAVID", "display": "David", "type": "theme", "coords": [[5, 6], [6, 6], [6, 7], [6, 8], [6, 9]]}, {"key": "COLO", "display": "Colo", "type": "theme", "coords": [[7, 9], [7, 8], [7, 7], [7, 6]]}];
+
+    const board = document.getElementById("board");
+    const progress = document.getElementById("progress");
+    const message = document.getElementById("message");
+    const resetBtn = document.getElementById("resetBtn");
+    const overlay = document.getElementById("overlay");
+    const closeOverlay = document.getElementById("closeOverlay");
+    const confettiCanvas = document.getElementById("confetti");
+    const confettiCtx = confettiCanvas.getContext("2d");
+
+    let isDragging = false;
+    let selection = [];
+    const found = new Set();
+
+    const solutionByPath = new Map();
+    for (const sol of SOLUTIONS) {
+      const forward = encodeCoords(sol.coords);
+      const backward = encodeCoords([...sol.coords].reverse());
+      solutionByPath.set(forward, sol);
+      solutionByPath.set(backward, sol);
+    }
+
+    function encodeCoords(coords) {
+      return coords.map(([r, c]) => r + "," + c).join("|");
+    }
+
+    function cellId(r, c) {
+      return "cell-" + r + "-" + c;
+    }
+
+    function getCell(r, c) {
+      return document.getElementById(cellId(r, c));
+    }
+
+    function getCellFromPoint(x, y) {
+      const el = document.elementFromPoint(x, y);
+      if (!el) return null;
+      return el.closest ? el.closest(".cell") : null;
+    }
+
+    function cellInfo(el) {
+      return {
+        r: Number(el.dataset.r),
+        c: Number(el.dataset.c),
+        letter: el.dataset.letter,
+        el
+      };
+    }
+
+    function sameCell(a, b) {
+      return a && b && a.r === b.r && a.c === b.c;
+    }
+
+    function adjacent(a, b) {
+      if (!a || !b) return false;
+      const dr = Math.abs(a.r - b.r);
+      const dc = Math.abs(a.c - b.c);
+      return dr <= 1 && dc <= 1 && !(dr === 0 && dc === 0);
+    }
+
+    function selectedCoordKey() {
+      return encodeCoords(selection.map(item => [item.r, item.c]));
+    }
+
+    function selectedLetters() {
+      return selection.map(item => item.letter).join("");
+    }
+
+    function clearSelection() {
+      for (const item of selection) {
+        item.el.classList.remove("selected");
+      }
+      selection = [];
+    }
+
+    function drawSelection() {
+      document.querySelectorAll(".cell.selected").forEach(el => el.classList.remove("selected"));
+      for (const item of selection) {
+        if (!item.el.classList.contains("solved")) {
+          item.el.classList.add("selected");
+        }
+      }
+    }
+
+    function addToSelection(el) {
+      if (!el || el.classList.contains("solved")) return;
+
+      const next = cellInfo(el);
+      const last = selection[selection.length - 1];
+
+      if (last && sameCell(last, next)) return;
+
+      // Backtracking: drag back over the previous cell to remove the last one.
+      if (selection.length >= 2) {
+        const previous = selection[selection.length - 2];
+        if (sameCell(previous, next)) {
+          const removed = selection.pop();
+          removed.el.classList.remove("selected");
+          drawSelection();
+          return;
+        }
+      }
+
+      if (selection.some(item => sameCell(item, next))) return;
+
+      if (!last || adjacent(last, next)) {
+        selection.push(next);
+        drawSelection();
+      }
+    }
+
+    function startSelection(el, pointerId) {
+      if (!el || el.classList.contains("solved")) return;
+      isDragging = true;
+      try { board.setPointerCapture(pointerId); } catch (e) {}
+      clearSelection();
+      addToSelection(el);
+    }
+
+    function commitSelection() {
+      if (!isDragging) return;
+      isDragging = false;
+
+      if (selection.length < 4) {
+        clearSelection();
+        setMessage("Keep going — theme words are at least four letters.");
+        return;
+      }
+
+      const path = selectedCoordKey();
+      const sol = solutionByPath.get(path);
+
+      if (!sol || found.has(sol.key)) {
+        showWrongSelection();
+        setMessage("Not quite. Try another path.");
+        return;
+      }
+
+      found.add(sol.key);
+      const className = sol.type === "spangram" ? "spangram-found" : "theme-found";
+      for (const item of selection) {
+        item.el.classList.remove("selected");
+        item.el.classList.add(className, "solved");
+        item.el.setAttribute("aria-label", item.letter + ", found");
+      }
+
+      setMessage(sol.type === "spangram" ? "Spangram found." : sol.display + " found.");
+      selection = [];
+      updateProgress();
+
+      if (found.size === SOLUTIONS.length) {
+        completePuzzle();
+      }
+    }
+
+    function showWrongSelection() {
+      const wrongCells = [...selection];
+      for (const item of wrongCells) {
+        item.el.classList.remove("selected");
+        item.el.classList.add("wrong", "shake");
+      }
+
+      setTimeout(() => {
+        for (const item of wrongCells) {
+          item.el.classList.remove("wrong", "shake");
+        }
+      }, 300);
+
+      selection = [];
+    }
+
+    function setMessage(text) {
+      message.textContent = text;
+    }
+
+    function updateProgress() {
+      progress.textContent = "Found: " + found.size + " / " + SOLUTIONS.length;
+    }
+
+    function completePuzzle() {
+      setMessage("Puzzle complete.");
+      startConfetti();
+      setTimeout(() => {
+        overlay.classList.add("show");
+        overlay.setAttribute("aria-hidden", "false");
+      }, 350);
+    }
+
+    function buildBoard() {
+      board.innerHTML = "";
+      GRID.forEach((row, r) => {
+        row.forEach((letter, c) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cell";
+          btn.id = cellId(r, c);
+          btn.dataset.r = r;
+          btn.dataset.c = c;
+          btn.dataset.letter = letter;
+          btn.textContent = letter;
+          btn.setAttribute("aria-label", letter);
+
+          btn.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            startSelection(btn, event.pointerId);
+          });
+
+          board.appendChild(btn);
+        });
+      });
+    }
+
+    board.addEventListener("pointermove", (event) => {
+      if (!isDragging) return;
+      event.preventDefault();
+      addToSelection(getCellFromPoint(event.clientX, event.clientY));
+    });
+
+    board.addEventListener("pointerup", (event) => {
+      event.preventDefault();
+      commitSelection();
+    });
+
+    board.addEventListener("pointercancel", () => {
+      isDragging = false;
+      clearSelection();
+    });
+
+    document.addEventListener("pointerup", () => {
+      if (isDragging) commitSelection();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      found.clear();
+      selection = [];
+      document.querySelectorAll(".cell").forEach(el => {
+        el.className = "cell";
+        el.setAttribute("aria-label", el.dataset.letter);
+      });
+      updateProgress();
+      setMessage("Find the first memory.");
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    });
+
+    closeOverlay.addEventListener("click", () => {
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    });
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) {
+        overlay.classList.remove("show");
+        overlay.setAttribute("aria-hidden", "true");
+      }
+    });
+
+    function resizeConfettiCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = window.innerWidth + "px";
+      confettiCanvas.style.height = window.innerHeight + "px";
+      confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener("resize", resizeConfettiCanvas);
+
+    let confettiPieces = [];
+    let confettiActive = false;
+
+    function makeConfettiPieces() {
+      const colors = ["#b7dff2", "#f8df72", "#000000", "#ffffff", "#83c7e8", "#e2bd22"];
+      confettiPieces = Array.from({ length: 170 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: -25 - Math.random() * window.innerHeight * 0.4,
+        w: 5 + Math.random() * 6,
+        h: 9 + Math.random() * 8,
+        vx: -2.3 + Math.random() * 4.6,
+        vy: 2.6 + Math.random() * 4.7,
+        rot: Math.random() * Math.PI,
+        vr: -0.18 + Math.random() * 0.36,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+    }
+
+    function confettiFrame() {
+      if (!confettiActive) return;
+      confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      for (const p of confettiPieces) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.vy += 0.035;
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rot);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        confettiCtx.restore();
+      }
+
+      confettiPieces = confettiPieces.filter(p => p.y < window.innerHeight + 40);
+
+      if (confettiPieces.length) {
+        requestAnimationFrame(confettiFrame);
+      } else {
+        confettiActive = false;
+        confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    function startConfetti() {
+      resizeConfettiCanvas();
+      makeConfettiPieces();
+      confettiActive = true;
+      requestAnimationFrame(confettiFrame);
+    }
+
+    buildBoard();
+    updateProgress();
+    resizeConfettiCanvas();
+  </script>
+</body>
+</html>
